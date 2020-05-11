@@ -1,12 +1,18 @@
+<script src="../store.js"></script>
 <template>
     <div>
         <router-link :to="{ name: 'homepage' }"><img class="header-logo" src="../assets/realtourhub-beta-blue.png"></router-link> 
         <section  class="login-page">
+           <span v-if="errors"><li v-for="error in errors">{{error}}</li></span>
         <h4>Register</h4>
         <form>
             <label for="name">Name</label>
             <div>
                 <input id="name" type="text" v-model="name" required autofocus>
+            </div>
+            <label for="name">Username</label>
+            <div>
+                <input id="username" type="text" v-model="username" required>
             </div>
 
             <label for="email" >E-Mail Address</label>
@@ -25,7 +31,7 @@
             <div>
               
 
-                 <button class="button3" v-on:click="handleSubmit"> <LoaderAnim class="loader" v-if="processing"/> 
+                 <button class="button3" v-on:click="checkForm"> <LoaderAnim class="loader" v-if="processing"/>
       <span  v-if="submitted"></span>
       <span  v-else>Register</span></button>
             </div>
@@ -45,47 +51,82 @@ import LoaderAnim from '../assets/loader.svg';
         props : ["nextUrl"],
         data(){
             return {
+                username:"",
                 name : "",
                 email : "",
                 password : "",
-                password_confirmation : "",
+                errors:[],
                  submitted:false,
         processing:false,
                 is_admin : null
             }
         },
         methods : {
+            validEmail: function (email) {
+                var re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                return re.test(email);
+            },
+            checkForm: function (e) {
+
+                this.errors = [];
+
+                if (!this.name) {
+                    this.errors.push("Name required.");
+                }
+                if (!this.username) {
+                    this.errors.push("Username required.");
+                }
+                if (!this.password) {
+                    this.errors.push("Password required.");
+                }
+                if (!this.email) {
+                    this.errors.push('Email required.');
+                } else if (!this.validEmail(this.email)) {
+                    this.errors.push('Valid email required.');
+                }
+
+                if (!this.errors.length) {
+                    this.handleSubmit();
+                }
+                e.preventDefault();
+
+            },
+
             handleSubmit(e) {
-                e.preventDefault()
+                //e.preventDefault()
                 this.processing=true;
         this.submitted=true;
         let this_vue=this;
 
-                if (this.password === this.password_confirmation && this.password.length > 0)
+                if (!this.errors.length)
                 {
-                    let url = "/api/register"
-                    if(this.is_admin != null || this.is_admin == 1) url = "/api/register-admin"
-                    this.$http.post(url, {
-                        name: this.name,
-                        email: this.email,
-                        password: this.password,
-                        is_admin: this.is_admin
-                    })
-                    .then(response => {
-                        localStorage.setItem('user',JSON.stringify(response.data.user))
-                        localStorage.setItem('jwt',response.data.token)
 
-                        if (localStorage.getItem('jwt') != null){
+                    this.processing=true;
+                    this.submitted=true;
+                    const formData = new FormData();
+                    formData.append('email', this.email);
+                    formData.append('password', this.password);
+                    formData.append('name', this.name);
+                    formData.append('username', this.username);
+                    this.$store.dispatch('register', formData)
+                    .then(response => {
+                     //   localStorage.setItem('user',JSON.stringify(response.data.user))
+                       // localStorage.setItem('jwt',response.data.token)
+
+                        if (localStorage.getItem('token') != null){
                             this.$emit('loggedIn')
                             if(this.$route.params.nextUrl != null){
                                 this.$router.push(this.$route.params.nextUrl)
                             }
                             else{
-                                this.$router.push('/')
+                                this.$router.push('/dashboard')
                             }
                         }
                     })
                     .catch(error => {
+                        this_vue.errors.push('Login failed');
+                        this.processing=false;
+                        this.submitted=false;
                         console.error(error);
                     });
                 } else {

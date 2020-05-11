@@ -10,7 +10,7 @@
   <input type="password" v-model="password" required>
 
   
-   <button class="button3" v-on:click="handleSubmit"> <LoaderAnim class="loader" v-if="processing"/> 
+   <button class="button3" v-on:click="handleSubmit"> <LoaderAnim class="loader" v-if="processing"/>
       <span  v-if="submitted"></span>
       <span  v-else>Login</span></button>
        <ul class="login-crumbs"><li>Forgotten password?</li> <router-link :to="{ name: 'register' }" ><li>Create a new account</li></router-link> </ul>
@@ -31,43 +31,34 @@ import LoaderAnim from '../assets/loader.svg';
               password : "",
                 submitted:false,
         processing:false,
+              errors:[]
           }
       },
       methods : {
           handleSubmit(e){
               e.preventDefault()
-                 this.processing=true;
-        this.submitted=true;
-              if (this.password.length > 0) {
-                  this.$http.post('/api/login', {
-                      email: this.email,
-                      password: this.password
-                  })
-                 .then(response => {
-                        let is_admin = response.data.user.is_admin
-                        localStorage.setItem('user',JSON.stringify(response.data.user))
-                        localStorage.setItem('jwt',response.data.token)
 
-                        if (localStorage.getItem('jwt') != null){
-                            this.$emit('loggedIn')
-                            if(this.$route.params.nextUrl != null){
-                                this.$router.push(this.$route.params.nextUrl)
-                            }
-                            else {
-                                if(is_admin== 1){
-                                    this.$router.push('admin')
-                                }
-                                else {
-                                    this.$router.push('dashboard')
-                                }
-                            }
-                        }
-                    })
-                  .catch(function (error) {
-                      console.error(error.response);
-                  });
+
+              let email = this.email
+              let password = this.password
+              if (this.password.length > 0 && this.email.length > 0){
+                  this.processing=true;
+                  this.submitted=true;
+                  const formData = new FormData();
+                  formData.append('email', email);
+                  formData.append('password', password);
+                  this.$store.dispatch('login', formData)
+                      .then(() => this.$router.push('/'))
+                      .catch(err => {alert(err);this.errors.push(err);})
               }
+              else{
+                  this.email = ''
+                  this.password = ''
+              }
+
+
           }
+
       }
   }
 </script>

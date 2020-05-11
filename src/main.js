@@ -10,7 +10,7 @@ Vue.prototype.$http = axios
 //Vue.use(axios)
 
 const vue = new Vue({
-  router,store,
+    store,router,
   render: h => h(App)
 })
 

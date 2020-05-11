@@ -3,6 +3,7 @@ import Router from 'vue-router'
 import HomePage from '@/components/HomePage'
 import Login from '@/components/Login'
 import Register from '@/components/Register'
+import Dashboard from '@/components/Profile'
 Vue.use(Router)
 
 //export default new Router({
@@ -30,6 +31,12 @@ let router = new Router({
         meta: {
             guest: true
         }
+      },
+      {
+          path: '/dashboard',
+          name: 'dashboard',
+          component: Dashboard,
+
       }
 
   ]
@@ -49,7 +56,7 @@ router.beforeEach((to, from, next) => {
                     next()
                 }
                 else{
-                    next({ name: 'userboard'})
+                    next({ name: 'dashboard'})
                 }
             }else {
                 next()
@@ -60,7 +67,7 @@ router.beforeEach((to, from, next) => {
             next()
         }
         else{
-            next({ name: 'userboard'})
+            next({ name: 'dashboard'})
         }
     }else {
         next()
